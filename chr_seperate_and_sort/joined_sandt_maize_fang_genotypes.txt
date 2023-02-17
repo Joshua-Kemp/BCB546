@@ -1,0 +1,1 @@
+../genotypefiles/joined_sandt_maize_fang_genotypes.txt

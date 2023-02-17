@@ -61,31 +61,35 @@ ln -s ../sorted_snp_positions.txt .
     echo "joining files.." >> ../error_report.err
     
 ## loop to join maize and teosinte files with the sorted_snp_position file.  SNPid is the common columnfor Genotypes in sandt_*
-    for Genotypes in sandt*
-    do
-    join -1 1 -2 1 -t $'\t' sorted_snp_positions.txt ${Genotypes} > joined_${Genotypes} 2>> ../error_report.err
-    done
+
+for Genotypes in sandt*
+do
+join -1 1 -2 1 -t $'\t' sorted_snp_positions.txt ${Genotypes} > joined_${Genotypes} 2>> ../error_report.err
+done
 
 ## create versions of these two files with ? notation replaced with -
-    echo "replacing questionmarks with hyphens" >> ../error_report.err
-    #loop with sed to replace question marks good thing there are none in the header or snp_ids
-    for GenoSNP in joined*
-    do
-    sed 's/?/-/g' ${GenoSNP} > hyphen_${GenoSNP} 2>> ../error_report.err
-    done
-    #return to main working directory
-    cd ..
+
+echo "replacing questionmarks with hyphens" >> ../error_report.err
+#loop with sed to replace question marks good thing there are none in the header or snp_ids
+
+for GenoSNP in joined*
+do
+sed 's/?/-/g' ${GenoSNP} > hyphen_${GenoSNP} 2>> ../error_report.err
+done
+
+#return to main working directory
+cd ..
 
 
 #create new directory for seperating chr and sorting by position
-    rm -r chr_seperate_and_sort
-    mkdir chr_seperate_and_sort
-    cd ./chr_seperate_and_sort
-    #soft link required files
-    ln -s ../genotypefiles/*joined_* .
-    #create directory to store output files
-    rm -r ../output
-    mkdir ../output
+rm -r chr_seperate_and_sort
+mkdir chr_seperate_and_sort
+cd ./chr_seperate_and_sort
+#soft link required files
+ln -s ../genotypefiles/*joined_* .
+#create directory to store output files
+rm -r ../output
+mkdir ../output
 
 
 ## Create a executable bash script to seperate our files by chromosome call seperate_by_chr.sh
