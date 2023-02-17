@@ -171,22 +171,38 @@ echo "joining files.." >> ../error_report.err
 
 for Genotypes in sandt*
 do
-join -1 1 -2 1 -t $'\t' sorted_snp_positions.txt ${Genotypes} > joined_${Genotypes} 2>> ../error_report.err
+join -1 1 -2 1 -t $'\t' sorted_snp_positions.txt ${Genotypes} > _joined_${Genotypes} 2>> ../error_report.err
 done
 ````
 
 First creates the required directory and links the appropriate files.  Then adds snp id position information using join.  column on in file 1 and 2 is the common column, -t  \$'\t' indicates that the files are tab delimited.
 
+### Remove SNP positions that are Multiple or Unknown
+
+````
+## Place unknown and multiple positions into their own files and then remove them from the originals
+for Joined in joined_*
+do
+awk '$3 ~ /multiple/ {print $0}' ${Joined} > multiple${Joined}
+awk '$3 ~ /unknown/ {print $0}' ${Joined} > unknown${Joined}
+awk '$3 !~ /unknown/ && $3 !~ /multiple/ {print $0}' ${Joined} > questionmark_${Joined}
+done
+
+````
+
+This set of awk commands first prints all the SNPS with multiple positions to a file, then the unknowns and then removes the multiples and unknowns from the original file.  I add this in late since at first I thought multiples and unknowns were restricted to the chromosome column.  !~ does not contain || is the or operator.
+
 ### Replace ? with - for missing data
 
 ````
 ## create versions of these two files with ? notation replaced with -
+
 echo "replacing questionmarks with hyphens" >> ../error_report.err
 #loop with sed to replace question marks good thing there are none in the header or snp_ids
 
-for GenoSNP in joined*
+for GenoSNP in questionmark_joined*
 do
-sed 's/?/-/g' ${GenoSNP} > hyphen_${GenoSNP} 2>> ../error_report.err
+sed 's/?/-/g' ${GenoSNP} > "${GenoSNP/questionmark/hyphen}" 2>> ../error_report.err
 done
 
 #return to main working directory
@@ -203,7 +219,7 @@ rm -r chr_seperate_and_sort
 mkdir chr_seperate_and_sort
 cd ./chr_seperate_and_sort
 #soft link required files
-ln -s ../genotypefiles/*joined_* .
+ln -s ../genotypefiles/*_joined_* .
 #create directory to store output files
 rm -r ../output
 mkdir ../output
@@ -214,7 +230,7 @@ mkdir ../output
 
 cat << 'EOF' > seperate_by_chr_and_sort_position.sh
 #!/bin/bash
-for CHR in {1..10} multiple unknown
+for CHR in {1..10}
 do
 awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3n > ../output/chr_${CHR}_$1
 done
@@ -225,11 +241,12 @@ EOF
 
 cat << 'EOF' > seperate_by_chr_and_sort_position_reverse.sh
 #!/bin/bash
-for CHR in {1..10} multiple unknown
+for CHR in {1..10}
 do
 awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3nr > ../output/chr_${CHR}_$1
 done
 EOF
+
 ````
 
 First half simply is creating another directory to use as a working space for this step.
@@ -247,7 +264,7 @@ The similar looking script just sorts in reverse by adding the r option to sort.
 ````
 ##run questionmark files through the seperation and sorting
 echo "starting joining process" >> ../error_report.err
-for GenoSNPfiles in joined_*
+for GenoSNPfiles in _joined_*
 do
 bash seperate_by_chr_and_sort_position.sh ${GenoSNPfiles} 2>> ../error_report.err
 done
@@ -261,14 +278,17 @@ done
 
 If our shell scripts were written well all we need to do is use bash to call the script and enter our respective genotype files into.
 
-### Remove Extra Unknown Chr and Missing Chr Files
+### Add in Unknown and Multiple
 
 ````
 #move to output folder
 cd ../output/
-echo "starting unknown and multiple removal" >> ../error_report.err
+echo "start adding unknown and multiple" >> ../error_report.err
 ##Remove extra unknown and missing positon files that were not asked for
-rm chr_{unknown,multiple}_hyphen* 2>> ../error_report.err
+cp ../genotypefiles/multiple* .
+cp ../genotypefiles/unknown* .
+
+
 ````
 The script creates seperates both the hypenated and questionmark versions of the genotype files.  Since the assignment only asks for one or the other this script removes the hyphenated missing and unknown files. 12*4-4=44 files.
 
@@ -282,7 +302,7 @@ Inspection of the files using head tail and sort -c confirm that the files seem 
     for file in *
     do
     mv "$file" "${file/_hyphen_joined_sandt_/_hyphen_}" 2>/dev/null
-    mv "$file" "${file/_joined_sandt_/_questionmark_}" 2>/dev/null
+    mv "$file" "${file/questionmark_joined_sandt_/_questionmark_}" 2>/dev/null
     done
     for file in *
     do

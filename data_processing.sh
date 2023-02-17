@@ -67,14 +67,22 @@ do
 join -1 1 -2 1 -t $'\t' sorted_snp_positions.txt ${Genotypes} > joined_${Genotypes} 2>> ../error_report.err
 done
 
+## Place unknown and multiple positions into their own files and then remove them from the originals
+for Joined in joined_*
+do
+awk '$3 ~ /multiple/ {print $0}' ${Joined} > multiple${Joined}
+awk '$3 ~ /unknown/ {print $0}' ${Joined} > unknown${Joined}
+awk '$3 !~ /unknown/ && $3 !~ /multiple/ {print $0}' ${Joined} > questionmark_${Joined}
+done
+
 ## create versions of these two files with ? notation replaced with -
 
 echo "replacing questionmarks with hyphens" >> ../error_report.err
 #loop with sed to replace question marks good thing there are none in the header or snp_ids
 
-for GenoSNP in joined*
+for GenoSNP in questionmark_joined*
 do
-sed 's/?/-/g' ${GenoSNP} > hyphen_${GenoSNP} 2>> ../error_report.err
+sed 's/?/-/g' ${GenoSNP} > "${GenoSNP/questionmark/hyphen}" 2>> ../error_report.err
 done
 
 #return to main working directory
@@ -86,7 +94,7 @@ rm -r chr_seperate_and_sort
 mkdir chr_seperate_and_sort
 cd ./chr_seperate_and_sort
 #soft link required files
-ln -s ../genotypefiles/*joined_* .
+ln -s ../genotypefiles/*_joined_* .
 #create directory to store output files
 rm -r ../output
 mkdir ../output
@@ -97,7 +105,7 @@ mkdir ../output
 
 cat << 'EOF' > seperate_by_chr_and_sort_position.sh
 #!/bin/bash
-for CHR in {1..10} multiple unknown
+for CHR in {1..10}
 do
 awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3n > ../output/chr_${CHR}_$1
 done
@@ -108,7 +116,7 @@ EOF
 
 cat << 'EOF' > seperate_by_chr_and_sort_position_reverse.sh
 #!/bin/bash
-for CHR in {1..10} multiple unknown
+for CHR in {1..10}
 do
 awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3nr > ../output/chr_${CHR}_$1
 done
@@ -118,7 +126,7 @@ EOF
 
 ##run questionmark files through the seperation and sorting
 echo "starting joining process" >> ../error_report.err
-for GenoSNPfiles in joined_*
+for GenoSNPfiles in questionmark_joined_*
 do
 bash seperate_by_chr_and_sort_position.sh ${GenoSNPfiles} 2>> ../error_report.err
 done
@@ -130,19 +138,19 @@ bash seperate_by_chr_and_sort_position_reverse.sh ${GenoSNPfiles} 2>> ../error_r
 done
 
 
-
 #move to output folder
 cd ../output/
-echo "starting unknown and multiple removal" >> ../error_report.err
+echo "start adding unknown and multiple" >> ../error_report.err
 ##Remove extra unknown and missing positon files that were not asked for
-rm chr_{unknown,multiple}_hyphen* 2>> ../error_report.err
+cp ../genotypefiles/multiple* .
+cp ../genotypefiles/unknown* .
 
 
 ## clean up the names so that they are in a format that is easily sorted
     for file in *
     do
     mv "$file" "${file/_hyphen_joined_sandt_/_hyphen_}" 2>/dev/null
-    mv "$file" "${file/_joined_sandt_/_questionmark_}" 2>/dev/null
+    mv "$file" "${file/questionmark_joined_sandt_/_questionmark_}" 2>/dev/null
     done
     for file in *
     do
@@ -165,4 +173,5 @@ rm chr_{unknown,multiple}_hyphen* 2>> ../error_report.err
     mv "$file" "${file/_teosinte_fang_genotypes/_SNPS}" 2>/dev/null
     done
 ##done should have all the necessary files
+
 exit
