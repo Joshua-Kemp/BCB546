@@ -1,1 +1,0 @@
-../seperate_maize_and_teosinte/maize_fang_genotypes.txt

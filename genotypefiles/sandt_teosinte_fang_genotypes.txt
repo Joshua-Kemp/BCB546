@@ -1,1 +1,0 @@
-../sort_and_transpose/sandt_teosinte_fang_genotypes.txt

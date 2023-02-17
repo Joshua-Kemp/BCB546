@@ -1,1 +1,0 @@
-../fang_et_al_genotypes.txt
