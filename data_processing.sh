@@ -150,12 +150,12 @@ cp ../genotypefiles/unknown* .
     for file in *
     do
     mv "$file" "${file/_hyphen_joined_sandt_/_hyphen_}" 2>/dev/null
-    mv "$file" "${file/questionmark_joined_sandt_/_questionmark_}" 2>/dev/null
+    mv "$file" "${file/_questionmark_joined_sandt_/_questionmark_}" 2>/dev/null
     done
     for file in *
     do
     mv "$file" "${file/*hyphen*/hyphen_${file}}" 2>/dev/null
-    mv "$file" "${file/*questionmark*/questionmark${file}}" 2>/dev/null
+    mv "$file" "${file/*questionmark*/questionmark_${file}}" 2>/dev/null
     done
     for file in *
     do

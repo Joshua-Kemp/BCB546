@@ -302,7 +302,7 @@ Inspection of the files using head tail and sort -c confirm that the files seem 
     for file in *
     do
     mv "$file" "${file/_hyphen_joined_sandt_/_hyphen_}" 2>/dev/null
-    mv "$file" "${file/questionmark_joined_sandt_/_questionmark_}" 2>/dev/null
+    mv "$file" "${file/_questionmark_joined_sandt_/_questionmark_}" 2>/dev/null
     done
     for file in *
     do
