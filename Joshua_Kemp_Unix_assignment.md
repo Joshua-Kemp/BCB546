@@ -80,7 +80,13 @@ From this I can tell that there are 14 columns of non-genotypic data in the join
 
 While I am at it I suppose joining removes the group option, so to seperate the groups, it is probably best to do that to the genotypes file and then join seperately. 
 
+
+
+
 ##Data Processing
+>note: entire processing may be re-done by running data_processing.sh in a directory with the correct input files.
+
+
 
 ### Seperating the Fang File by Species
 
