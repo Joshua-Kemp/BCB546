@@ -219,6 +219,17 @@ do
 awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3n > ../output/chr_${CHR}_$1
 done
 EOF
+
+## Create a executable bash script to seperate our files by chromosome call seperate_by_chr.sh then sort in reverse
+##seperate_by_chr.sh assumes chr information is in column 2 and in numberic format and that there are 10 chromosomes and that SNP positon is in the 3rd column
+
+cat << 'EOF' > seperate_by_chr_and_sort_position_reverse.sh
+#!/bin/bash
+for CHR in {1..10} multiple unknown
+do
+awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3nr > ../output/chr_${CHR}_$1
+done
+EOF
 ````
 
 First half simply is creating another directory to use as a working space for this step.
@@ -229,18 +240,26 @@ In the for loop we use the expansion {1,..10} since we have 10 chromosomes and a
 
 The pipe passes that data to sort which sorts column 3 (k3) representing position data, and sorts it numerically since the option ,3n specificies that column 3 is numeric.  The sorted data is then passed to a new file in the directory output with a name derived from the chromosome we are sorting by, and the name of the starting genotype file.
 
+The similar looking script just sorts in reverse by adding the r option to sort.
+
 ### Running the Shell Script "seperate\_by\_chr\_and\_sort\_position.sh"
 
 ````
-##run files through the seperation and sorting
+##run questionmark files through the seperation and sorting
 echo "starting joining process" >> ../error_report.err
-for GenoSNPfiles in *joined_*
+for GenoSNPfiles in joined_*
 do
 bash seperate_by_chr_and_sort_position.sh ${GenoSNPfiles} 2>> ../error_report.err
 done
+
+##run hyphen files through seperation and reverse sorting
+for GenoSNPfiles in hyphen_joined_*
+do
+bash seperate_by_chr_and_sort_position_reverse.sh ${GenoSNPfiles} 2>> ../error_report.err
+done
 ````
 
-If our shell script was written well all we need to do is use bash to call the script and enter our genotype files into it using a loop.
+If our shell scripts were written well all we need to do is use bash to call the script and enter our respective genotype files into.
 
 ### Remove Extra Unknown Chr and Missing Chr Files
 

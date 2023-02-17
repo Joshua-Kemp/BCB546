@@ -103,12 +103,33 @@ awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3n > ../output/chr_${CHR}_$
 done
 EOF
 
-##run files through the seperation and sorting
+## Create a executable bash script to seperate our files by chromosome call seperate_by_chr.sh then sort in reverse
+##seperate_by_chr.sh assumes chr information is in column 2 and in numberic format and that there are 10 chromosomes and that SNP positon is in the 3rd column
+
+cat << 'EOF' > seperate_by_chr_and_sort_position_reverse.sh
+#!/bin/bash
+for CHR in {1..10} multiple unknown
+do
+awk -v CHR=${CHR} '$2==CHR {print $0}' $1 | sort -k3,3nr > ../output/chr_${CHR}_$1
+done
+EOF
+
+
+
+##run questionmark files through the seperation and sorting
 echo "starting joining process" >> ../error_report.err
-for GenoSNPfiles in *joined_*
+for GenoSNPfiles in joined_*
 do
 bash seperate_by_chr_and_sort_position.sh ${GenoSNPfiles} 2>> ../error_report.err
 done
+
+##run hyphen files through seperation and reverse sorting
+for GenoSNPfiles in hyphen_joined_*
+do
+bash seperate_by_chr_and_sort_position_reverse.sh ${GenoSNPfiles} 2>> ../error_report.err
+done
+
+
 
 #move to output folder
 cd ../output/
